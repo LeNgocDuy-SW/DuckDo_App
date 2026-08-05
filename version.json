@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "versionCode": 2,
+  "version": "1.0.2",
+  "versionCode": 3,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "• Thiết kế thêm màn hình Chào mừng 'Welcome to Duck Do' tươi vui 🦆✨\n• Hiệu ứng nảy Mascot Vịt Vàng và hạt trôi bồng bềnh 🐾\n• Tự động kiểm tra & cài đặt bản cập nhật ngầm"
+  "releaseNotes": "• Thiết kế giao diện Duck Theme vịt vàng tươi mới 🦆✨\n• Thanh Ngày/Tháng/Năm thu gọn mở lịch thông minh 📅\n• Màn hình Welcome chỉ hiển thị 1 lần duy nhất khi cài app"
 }
