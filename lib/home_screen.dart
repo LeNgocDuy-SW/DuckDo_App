@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers.dart';
 import 'add_task_bottom_sheet.dart';
 import 'services/update_service.dart';
-import 'package:table_calendar/table_calendar.dart';
-
 import 'services/notification_services.dart';
-import 'screens/welcome_screen.dart';
+import 'widgets/duck_logo.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +15,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isCalendarExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -246,6 +247,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  String _formatDateTitle(DateTime date) {
+    final now = DateTime.now();
+    final isToday = isSameDay(date, now);
+    final isTomorrow = isSameDay(date, now.add(const Duration(days: 1)));
+    final isYesterday = isSameDay(date, now.subtract(const Duration(days: 1)));
+
+    String prefix = '';
+    if (isToday) prefix = 'Hôm nay, ';
+    if (isTomorrow) prefix = 'Ngày mai, ';
+    if (isYesterday) prefix = 'Hôm qua, ';
+
+    final daysOfWeek = [
+      'Chủ Nhật',
+      'Thứ Hai',
+      'Thứ Ba',
+      'Thứ Tư',
+      'Thứ Năm',
+      'Thứ Sáu',
+      'Thứ Bảy'
+    ];
+    final dayName = daysOfWeek[date.weekday % 7];
+
+    return '$prefix$dayName (${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year})';
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedDate = ref.watch(selectedDateProvider);
@@ -269,24 +295,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'DuckDo 🦆',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: DuckLogo(
+                size: 26,
+                animate: true,
+                showQuackBadge: false,
+              ),
+            ),
+            SizedBox(width: 8),
+            Text(
+              'DuckDo',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: Color(0xFFFF8F00),
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            tooltip: 'Xem Màn hình Chào mừng Duck Do',
-            icon: const Text('🦆', style: TextStyle(fontSize: 20)),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      const WelcomeScreen(isFirstTimeLaunch: false),
-                ),
-              );
-            },
-          ),
           IconButton(
             tooltip: 'Kiểm tra bản cập nhật mới',
             icon: const Icon(Icons.system_update_rounded),
@@ -298,7 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : 'Chuyển sang chế độ Tối',
             icon: Icon(
               isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-              color: isDark ? Colors.amber : colorScheme.primary,
+              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFFFF8F00),
             ),
             onPressed: () {
               ref.read(themeProvider.notifier).toggleTheme();
@@ -308,47 +341,160 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: Column(
         children: [
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: selectedDate,
-            calendarFormat: CalendarFormat.month,
-            selectedDayPredicate: (day) {
-              return isSameDay(selectedDate, day);
+          // 1. THANH CHỌN NGÀY THÁNG THU GỌN (Compact Expandable Date Selector)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isCalendarExpanded = !_isCalendarExpanded;
+              });
             },
-            onDaySelected: (selectedDay, focusedDay) {
-              ref.read(selectedDateProvider.notifier).state = selectedDay;
-            },
-            headerStyle: HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-              titleTextStyle: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                      : const [Color(0xFFFFF8E7), Color(0xFFFFF3C4)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFFFD54F),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8F00).withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ),
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                shape: BoxShape.circle,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF8F00).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Color(0xFFFF8F00),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _formatDateTitle(selectedDate),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _isCalendarExpanded
+                              ? 'Chạm để thu gọn lịch 🔼'
+                              : 'Chạm để mở lịch chọn ngày 🔽',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF78350F),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _isCalendarExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Color(0xFFFF8F00),
+                      size: 26,
+                    ),
+                  ),
+                ],
               ),
-              selectedDecoration: BoxDecoration(
-                color: colorScheme.primary,
-                shape: BoxShape.circle,
-              ),
-              selectedTextStyle: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              weekendTextStyle: TextStyle(color: Colors.red.shade300),
             ),
           ),
-          const Divider(height: 1, thickness: 1),
 
-          // Thanh chọn lọc danh mục
+          // LỊCH TO MỞ RỘNG (TableCalendar Expandable)
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E293B).withValues(alpha: 0.8)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFFFE082),
+                ),
+              ),
+              child: TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: selectedDate,
+                calendarFormat: CalendarFormat.month,
+                selectedDayPredicate: (day) {
+                  return isSameDay(selectedDate, day);
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  ref.read(selectedDateProvider.notifier).state = selectedDay;
+                  setState(() {
+                    _isCalendarExpanded = false; // Thu gọn tự động sau khi chọn
+                  });
+                },
+                headerStyle: HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: const Color(0xFFFFB300).withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: const BoxDecoration(
+                    color: Color(0xFFFF8F00),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  weekendTextStyle: TextStyle(color: Colors.red.shade300),
+                ),
+              ),
+            ),
+            crossFadeState: _isCalendarExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+
+          const SizedBox(height: 4),
+
+          // 2. Thanh lọc danh mục công việc
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -360,6 +506,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       label: Text(cat),
                       selected: isSelected,
                       visualDensity: VisualDensity.compact,
+                      selectedColor: const Color(0xFFFFB300),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (isDark ? Colors.white70 : Colors.black87),
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
                       onSelected: (selected) {
                         if (selected) {
                           ref.read(selectedCategoryProvider.notifier).state = cat;
@@ -373,9 +527,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const Divider(height: 1, thickness: 1),
 
+          // 3. Danh sách công việc mở rộng thoải mái
           Expanded(
             child: tasksAsyncValue.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: Color(0xFFFF8F00)),
+              ),
               error: (error, stack) {
                 return Center(
                   child: Column(
@@ -406,40 +563,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .toList();
                 }
 
+                // DUCK MASCOT EMPTY STATE
                 if (dailyTasks.isEmpty) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.event_available,
-                          size: 64,
-                          color: colorScheme.onSurface.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          selectedCategory == 'Tất cả'
-                              ? 'Không có công việc nào trong ngày này'
-                              : 'Không có công việc thuộc danh mục "$selectedCategory"',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 20),
+                          const DuckLogo(
+                            size: 110,
+                            animate: true,
+                            showQuackBadge: true,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Text(
+                            selectedCategory == 'Tất cả'
+                                ? 'Không có công việc nào trong ngày này!'
+                                : 'Không có công việc nào trong danh mục "$selectedCategory"',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF475569),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Thư giãn như chú vịt quack quack 🐣 hoặc chạm nút bên dưới để thêm mới!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
 
-                final completedCount = dailyTasks
-                    .where((t) => t.isCompleted)
-                    .length;
+                final completedCount =
+                    dailyTasks.where((t) => t.isCompleted).length;
                 final totalCount = dailyTasks.length;
                 final progress = completedCount / totalCount;
 
                 return Column(
                   children: [
-                    // Thanh tiến độ hoàn thành công việc trong ngày
+                    // Thanh tiến độ hoàn thành công việc theo Duck Theme
                     Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -447,28 +623,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.5,
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? const [Color(0xFF1E293B), Color(0xFF0F172A)]
+                              : const [Color(0xFFFFFBEB), Color(0xFFFFF3C4)],
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF334155)
+                              : const Color(0xFFFFE082),
+                        ),
                       ),
                       child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Tiến độ hoàn thành',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
+                              Row(
+                                children: const [
+                                  Text(
+                                    '🐥 Tiến độ Duck Do',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
                               ),
                               Text(
                                 '$completedCount/$totalCount (${(progress * 100).toInt()}%)',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
+                                  color: Color(0xFFFF8F00),
                                 ),
                               ),
                             ],
@@ -479,11 +666,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: LinearProgressIndicator(
                               value: progress,
                               minHeight: 8,
-                              backgroundColor: colorScheme.outlineVariant,
+                              backgroundColor: isDark
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFFFFECB3),
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 progress == 1.0
                                     ? Colors.green
-                                    : colorScheme.primary,
+                                    : const Color(0xFFFF8F00),
                               ),
                             ),
                           ),
@@ -493,9 +682,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: ListView.builder(
                         itemCount: dailyTasks.length,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          bottom: 80,
                         ),
                         itemBuilder: (context, index) {
                           final task = dailyTasks[index];
@@ -540,11 +730,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 elevation: task.isCompleted ? 0 : 2,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color: task.isCompleted
+                                        ? Colors.transparent
+                                        : (isDark
+                                            ? const Color(0xFF334155)
+                                            : const Color(0xFFFFE082)),
+                                  ),
                                 ),
                                 color: task.isCompleted
-                                    ? colorScheme.surfaceContainerHighest
-                                          .withValues(alpha: 0.3)
-                                    : colorScheme.surface,
+                                    ? (isDark
+                                        ? const Color(0xFF0F172A).withValues(alpha: 0.5)
+                                        : Colors.grey.shade100)
+                                    : (isDark
+                                        ? const Color(0xFF1E293B)
+                                        : Colors.white),
                                 child: ListTile(
                                   onTap: () {
                                     showModalBottomSheet(
@@ -575,9 +775,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                 ? TextDecoration.lineThrough
                                                 : null,
                                             color: task.isCompleted
-                                                ? colorScheme.onSurface.withValues(
-                                                    alpha: 0.5,
-                                                  )
+                                                ? colorScheme.onSurface
+                                                    .withValues(alpha: 0.4)
                                                 : colorScheme.onSurface,
                                           ),
                                         ),
@@ -587,7 +786,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ],
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       if (subtitleText.isNotEmpty)
                                         Padding(
@@ -614,18 +814,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: colorScheme
-                                                  .secondaryContainer
-                                                  .withValues(alpha: 0.5),
+                                              color: const Color(0xFFFFB300)
+                                                  .withValues(alpha: 0.15),
                                               borderRadius:
                                                   BorderRadius.circular(6),
                                             ),
                                             child: Text(
                                               task.category,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 11,
-                                                color: colorScheme
-                                                    .onSecondaryContainer,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFFD97706),
                                               ),
                                             ),
                                           ),
@@ -660,7 +859,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   leading: Checkbox(
                                     value: task.isCompleted,
-                                    activeColor: colorScheme.primary,
+                                    activeColor: const Color(0xFFFF8F00),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
@@ -706,8 +905,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             builder: (context) => const AddTaskBottomSheet(),
           );
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Thêm công việc'),
+        backgroundColor: const Color(0xFFFF8F00),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'Thêm công việc',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
