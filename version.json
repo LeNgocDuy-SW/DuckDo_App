@@ -1,6 +1,6 @@
 {
-  "version": "1.0.2",
-  "versionCode": 3,
+  "version": "1.0.3",
+  "versionCode": 4,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "• Thiết kế giao diện Duck Theme vịt vàng tươi mới 🦆✨\n• Thanh Ngày/Tháng/Năm thu gọn mở lịch thông minh 📅\n• Màn hình Welcome chỉ hiển thị 1 lần duy nhất khi cài app"
+  "releaseNotes": "• Thiết kế mới giao diện 'Thêm/Sửa công việc' Duck Theme cút xỉu 🐥✨\n• Phân loại mức độ ưu tiên & danh mục trực quan, dễ thao tác\n• Tự động hẹn giờ & lên lịch thông báo chuẩn xác"
 }

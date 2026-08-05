@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import 'providers.dart';
 import 'models/task.dart';
 import 'services/notification_services.dart';
+import 'widgets/duck_logo.dart';
 
 class AddTaskBottomSheet extends ConsumerStatefulWidget {
   final Task? taskToEdit;
@@ -24,9 +25,9 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
   String _selectedRepeatRule = 'none';
 
   final List<Map<String, dynamic>> _priorities = [
-    {'label': 'Thấp', 'value': 0, 'color': Colors.green},
-    {'label': 'Thường', 'value': 1, 'color': Colors.blue},
-    {'label': 'Gấp!', 'value': 2, 'color': Colors.red},
+    {'label': '🟢 Thấp', 'value': 0, 'color': const Color(0xFF10B981)},
+    {'label': '🔵 Thường', 'value': 1, 'color': const Color(0xFF3B82F6)},
+    {'label': '🔴 Gấp!', 'value': 2, 'color': const Color(0xFFEF4444)},
   ];
 
   final List<String> _categories = [
@@ -72,6 +73,17 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
       initialDate: _selectedDate ?? now,
       firstDate: now.isBefore(_selectedDate ?? now) ? now : (_selectedDate ?? now),
       lastDate: DateTime(now.year + 5),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFFFF8F00),
+                  onPrimary: Colors.white,
+                ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedDate == null || !mounted) return;
     final pickedTime = await showTimePicker(
@@ -79,6 +91,16 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
       initialTime: _selectedDate != null
           ? TimeOfDay.fromDateTime(_selectedDate!)
           : TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: const Color(0xFFFF8F00),
+                ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null || !mounted) return;
     setState(() {
@@ -98,13 +120,22 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
     final year = dt.year;
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
-    return 'Hạn chót: $hour:$minute - $day/$month/$year';
+    return '$hour:$minute - $day/$month/$year';
   }
 
   Future<void> _saveTask() async {
     if (_titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập tên công việc')),
+        SnackBar(
+          content: const Row(
+            children: [
+              Text('🐥 Vui lòng nhập tên công việc!'),
+            ],
+          ),
+          backgroundColor: const Color(0xFFFF8F00),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
@@ -126,7 +157,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
         await NotificationService().cancelNotification(widget.taskToEdit!.id);
       }
 
-      // 1. Chờ lưu task vào DB để nhận/giữ ID chính xác từ Isar
+      // 1. Lưu task vào DB
       await ref.read(databaseProvider).saveTask(newTask);
 
       // 2. Kiểm tra và lên lịch thông báo
@@ -136,7 +167,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
         if (_selectedDate!.isAfter(now)) {
           await NotificationService().scheduleNotification(
             id: newTask.id,
-            title: '⏰ Nhắc việc: ${newTask.title}',
+            title: '⏰ Nhắc việc DuckDo: ${newTask.title}',
             body: newTask.description?.isNotEmpty == true
                 ? newTask.description!
                 : 'Đã đến thời gian thực hiện công việc này!',
@@ -149,7 +180,7 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
             _selectedDate!.minute == now.minute) {
           await NotificationService().showInstantNotification(
             id: newTask.id,
-            title: '⏰ Nhắc việc: ${newTask.title}',
+            title: '⏰ Nhắc việc DuckDo: ${newTask.title}',
             body: newTask.description?.isNotEmpty == true
                 ? newTask.description!
                 : 'Đã đến thời gian thực hiện công việc này!',
@@ -172,214 +203,407 @@ class _AddTaskBottomSheetState extends ConsumerState<AddTaskBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEditing = widget.taskToEdit != null;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 12,
-          bottom: bottomInset + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Drag indicator handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 14,
+            bottom: bottomInset + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag Indicator handle
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF475569)
+                        : const Color(0xFFFFD54F),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              isEditing ? 'Chỉnh sửa công việc' : 'Thêm công việc mới',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Tên công việc',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.task_alt),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _descController,
-              decoration: InputDecoration(
-                labelText: 'Mô tả chi tiết',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.description_outlined),
-              ),
-              maxLines: 3,
-              minLines: 1,
-            ),
-            const SizedBox(height: 12),
 
-            // Chọn mức độ ưu tiên
-            Text(
-              'Mức độ ưu tiên',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              // Title Header with Duck Mascot Accent
+              Row(
+                children: [
+                  const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: DuckLogo(
+                      size: 24,
+                      animate: true,
+                      showQuackBadge: false,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    isEditing ? 'Chỉnh sửa công việc' : 'Thêm công việc Duck Do 🐥',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: _priorities.map((p) {
-                final isSelected = _selectedPriority == p['value'];
-                final Color pColor = p['color'] as Color;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: FilterChip(
-                    label: Text(
-                      p['label'] as String,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : pColor,
-                        fontWeight: FontWeight.bold,
+
+              const SizedBox(height: 18),
+
+              // Input Tên công việc
+              TextField(
+                controller: _titleController,
+                autofocus: true,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Tên công việc *',
+                  hintText: 'Nhập công việc cần làm...',
+                  floatingLabelStyle: const TextStyle(color: Color(0xFFFF8F00)),
+                  filled: true,
+                  fillColor: isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFFFFBEB),
+                  prefixIcon: const Icon(
+                    Icons.task_alt_rounded,
+                    color: Color(0xFFFF8F00),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFFF8F00),
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Input Mô tả chi tiết
+              TextField(
+                controller: _descController,
+                maxLines: 2,
+                minLines: 1,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Ghi chú mô tả (Tùy chọn)',
+                  hintText: 'Thêm thông tin bổ sung...',
+                  floatingLabelStyle: const TextStyle(color: Color(0xFFFF8F00)),
+                  filled: true,
+                  fillColor: isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFFFFBEB),
+                  prefixIcon: const Icon(
+                    Icons.notes_rounded,
+                    color: Color(0xFFFFB300),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFFFB300),
+                      width: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Mức độ ưu tiên
+              Text(
+                'Mức độ ưu tiên',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: _priorities.map((p) {
+                  final isSelected = _selectedPriority == p['value'];
+                  final Color pColor = p['color'] as Color;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedPriority = p['value'] as int;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? pColor
+                                : (isDark
+                                    ? const Color(0xFF0F172A)
+                                    : pColor.withValues(alpha: 0.1)),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? pColor
+                                  : pColor.withValues(alpha: 0.3),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              p['label'] as String,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : pColor,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    selected: isSelected,
-                    selectedColor: pColor,
-                    backgroundColor: pColor.withValues(alpha: 0.1),
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() {
-                          _selectedPriority = p['value'] as int;
-                        });
-                      }
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 12),
-
-            // Chọn danh mục
-            Text(
-              'Danh mục',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _categories.map((cat) {
-                  final isSelected = _selectedCategory == cat;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(cat),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() {
-                            _selectedCategory = cat;
-                          });
-                        }
-                      },
-                    ),
                   );
                 }).toList(),
               ),
-            ),
-            const SizedBox(height: 12),
 
-            // Chọn chu kỳ lặp lại
-            Text(
-              'Chu kỳ lặp lại',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _repeatRules.map((rule) {
-                  final isSelected = _selectedRepeatRule == rule['value'];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(rule['label']!),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() {
-                            _selectedRepeatRule = rule['value']!;
-                          });
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _selectedDate == null
-                        ? 'Chưa chọn thời gian'
-                        : _formatDateTime(_selectedDate!),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: _selectedDate == null
-                          ? colorScheme.onSurface.withValues(alpha: 0.6)
-                          : colorScheme.primary,
-                    ),
+              // Danh mục
+              Text(
+                'Danh mục',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _categories.map((cat) {
+                    final isSelected = _selectedCategory == cat;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: ChoiceChip(
+                        label: Text(cat),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFFFFB300),
+                        visualDensity: VisualDensity.compact,
+                        labelStyle: TextStyle(
+                          fontSize: 13,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _selectedCategory = cat;
+                            });
+                          }
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Chu kỳ lặp lại
+              Text(
+                'Chu kỳ lặp lại',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _repeatRules.map((rule) {
+                    final isSelected = _selectedRepeatRule == rule['value'];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6.0),
+                      child: ChoiceChip(
+                        label: Text(rule['label']!),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFFFFB300),
+                        visualDensity: VisualDensity.compact,
+                        labelStyle: TextStyle(
+                          fontSize: 13,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _selectedRepeatRule = rule['value']!;
+                            });
+                          }
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Hạn chót & Nhắc giờ
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFFFE082),
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: _presentDateTimePicker,
-                  icon: const Icon(Icons.access_time_filled),
-                  label: const Text('Hẹn giờ'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _saveTask,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.access_time_filled_rounded,
+                      color: Color(0xFFFF8F00),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _selectedDate == null
+                                ? 'Chưa đặt thời gian hạn chót'
+                                : 'Hạn chót: ${_formatDateTime(_selectedDate!)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: _selectedDate == null
+                                  ? (isDark
+                                      ? Colors.white54
+                                      : const Color(0xFF64748B))
+                                  : const Color(0xFFFF8F00),
+                            ),
+                          ),
+                          if (_selectedDate != null)
+                            const Text(
+                              '🔔 Tự động bật thông báo khi tới giờ',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _presentDateTimePicker,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFFF8F00),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                      ),
+                      child: Text(
+                        _selectedDate == null ? 'Chọn giờ' : 'Đổi giờ',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Text(
-                isEditing ? 'Cập nhật công việc' : 'Lưu công việc',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+
+              const SizedBox(height: 20),
+
+              // Nút Lưu công việc với Gradient Duck Theme
+              Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFFFB300),
+                      Color(0xFFFF8F00),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF8F00).withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: _saveTask,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        isEditing ? 'Cập nhật công việc' : 'Lưu công việc Duck Do 🐥',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
