@@ -58,9 +58,12 @@ class UpdateService {
     try {
       final currentCode = await getCurrentVersionCode();
 
+      final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      final url = '$_manifestUrl?t=$cacheBuster';
+
       final response = await http
-          .get(Uri.parse(_manifestUrl))
-          .timeout(const Duration(seconds: 4));
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;

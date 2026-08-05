@@ -43,78 +43,152 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      barrierDismissible: false,
+      builder: (dialogContext) {
         double progress = 0.0;
+        bool isDownloading = false;
+        bool isChecking = updateInfo == null;
+        UpdateInfo? latestInfo = updateInfo;
 
         return StatefulBuilder(
           builder: (context, setState) {
+            if (isChecking) {
+              UpdateService().checkForUpdate().then((info) {
+                if (dialogContext.mounted) {
+                  setState(() {
+                    latestInfo = info;
+                    isChecking = false;
+                  });
+                }
+              });
+            }
+
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               title: Row(
-                children: const [
-                  Text('🦆 DuckDo ', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('v1.0.0', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                children: [
+                  const Text('🦆 DuckDo ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('v$currentVer', style: const TextStyle(fontSize: 14, color: Colors.grey)),
                 ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Phiên bản hiện tại: v$currentVer'),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primaryContainer
-                          .withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
+                  if (isChecking) ...[
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Row(
+                        children: [
+                          CircularProgressIndicator(strokeWidth: 2.5),
+                          SizedBox(width: 16),
+                          Expanded(child: Text('Đang kết nối kiểm tra phiên bản mới...')),
+                        ],
+                      ),
                     ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '✨ Hệ thống Cập nhật Tự động (In-App Auto Update)',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          '• Khi phát hiện có bản nâng cấp mới, ứng dụng sẽ tự động tải & nâng cấp trực tiếp ngầm trong App mà không cần chép file tay.',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
+                  ] else if (latestInfo != null) ...[
+                    Text(
+                      '🎉 Đã có phiên bản mới: v${latestInfo!.version}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  if (progress > 0) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '✨ Có gì mới trong bản cập nhật này:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            latestInfo!.releaseNotes,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    const Text('🦆 Bạn đang sử dụng phiên bản mới nhất!'),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Hệ thống tự động kiểm tra bản cập nhật mỗi khi có nâng cấp mới trên GitHub.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                  if (isDownloading) ...[
                     const SizedBox(height: 16),
-                    LinearProgressIndicator(value: progress),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(value: progress, minHeight: 8),
+                    ),
                     const SizedBox(height: 6),
-                    Text('Đang tải bản nâng cấp: ${(progress * 100).toInt()}%'),
+                    Text(
+                      'Đang tải bản nâng cấp: ${(progress * 100).toInt()}%',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ],
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Đóng'),
-                ),
-                FilledButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🦆 Bạn đang dùng phiên bản mới nhất!'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Đã mới nhất'),
-                ),
+                if (!isDownloading)
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Đóng'),
+                  ),
+                if (!isChecking && latestInfo != null && !isDownloading)
+                  FilledButton.icon(
+                    onPressed: () async {
+                      setState(() {
+                        isDownloading = true;
+                      });
+                      final success = await UpdateService().downloadAndInstallApk(
+                        downloadUrl: latestInfo!.downloadUrl,
+                        onProgress: (p) {
+                          if (dialogContext.mounted) {
+                            setState(() {
+                              progress = p;
+                            });
+                          }
+                        },
+                      );
+                      if (dialogContext.mounted) {
+                        if (!success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('⚠️ Tải bản nâng cấp không thành công. Hãy thử lại.'),
+                            ),
+                          );
+                        }
+                        Navigator.pop(dialogContext);
+                      }
+                    },
+                    icon: const Icon(Icons.download_rounded),
+                    label: Text('Tải & Nâng cấp v${latestInfo!.version}'),
+                  )
+                else if (!isChecking && latestInfo == null)
+                  FilledButton.icon(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Đã mới nhất'),
+                  ),
               ],
             );
           },
