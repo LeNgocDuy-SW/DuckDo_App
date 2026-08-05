@@ -6,6 +6,7 @@ import 'services/update_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'services/notification_services.dart';
+import 'screens/welcome_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -200,6 +201,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            tooltip: 'Xem Màn hình Chào mừng Duck Do',
+            icon: const Text('🦆', style: TextStyle(fontSize: 20)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const WelcomeScreen(isFirstTimeLaunch: false),
+                ),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Kiểm tra bản cập nhật mới',
             icon: const Icon(Icons.system_update_rounded),

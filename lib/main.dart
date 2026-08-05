@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'services/notification_services.dart';
 import 'providers.dart';
 
@@ -17,6 +18,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
+    final hasSeenWelcomeAsync = ref.watch(hasSeenWelcomeProvider);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -25,7 +27,7 @@ class MyApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1),
+          seedColor: const Color(0xFFFFB300),
           brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
@@ -38,7 +40,7 @@ class MyApp extends ConsumerWidget {
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF818CF8),
+          seedColor: const Color(0xFFFFB300),
           brightness: Brightness.dark,
         ),
         scaffoldBackgroundColor: const Color(0xFF0F172A),
@@ -48,7 +50,11 @@ class MyApp extends ConsumerWidget {
           scrolledUnderElevation: 2,
         ),
       ),
-      home: const HomeScreen(),
+      home: hasSeenWelcomeAsync.when(
+        data: (hasSeen) => hasSeen ? const HomeScreen() : const WelcomeScreen(),
+        loading: () => const WelcomeScreen(),
+        error: (err, stack) => const WelcomeScreen(),
+      ),
     );
   }
 }

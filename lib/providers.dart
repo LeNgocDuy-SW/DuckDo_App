@@ -49,3 +49,13 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
   return ThemeNotifier();
 });
+
+final hasSeenWelcomeProvider = FutureProvider<bool>((ref) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_seen_welcome') ?? false;
+  } catch (_) {
+    return false;
+  }
+});
+
