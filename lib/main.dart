@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/notification_services.dart';
+import 'services/auth_service.dart';
 import 'providers.dart';
 
 void main() async {
@@ -51,10 +52,51 @@ class MyApp extends ConsumerWidget {
         ),
       ),
       home: hasSeenWelcomeAsync.when(
-        data: (hasSeen) => hasSeen ? const HomeScreen() : const WelcomeScreen(),
+        data: (hasSeen) {
+          if (!hasSeen) {
+            // Lần đầu mở app: Welcome → Auth → Home
+            return const WelcomeScreen();
+          }
+          // Đã từng dùng app: kiểm tra trạng thái đăng nhập
+          return const _AuthGate();
+        },
         loading: () => const WelcomeScreen(),
         error: (err, stack) => const WelcomeScreen(),
       ),
     );
   }
+}
+
+/// Gate: Nếu đã đăng nhập → HomeScreen, chưa đăng nhập → AuthScreen
+class _AuthGate extends StatefulWidget {
+  const _AuthGate();
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  Widget _screen = const Scaffold(
+    body: Center(
+      child: CircularProgressIndicator(color: Color(0xFFFF8F00)),
+    ),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _decideScreen();
+  }
+
+  Future<void> _decideScreen() async {
+    final user = await AuthService().getCurrentUser();
+    if (!mounted) return;
+    setState(() {
+      // Nếu đã đăng nhập (kể cả chế độ khách đã từng bỏ qua) → thẳng HomeScreen
+      _screen = user != null ? const HomeScreen() : const HomeScreen();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => _screen;
 }

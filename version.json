@@ -1,6 +1,6 @@
 {
-  "version": "1.0.6",
-  "versionCode": 7,
+  "version": "1.0.7",
+  "versionCode": 8,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
   "releaseNotes": "• Ra mắt Đăng nhập & Đồng bộ Đám mây 🔑: Hỗ trợ Google 🌐, Facebook 📘, Email & Sao lưu dữ liệu ☁️\n• Ra mắt Tạo công việc bằng Giọng nói AI 🎙️: Nói 'Nhắc tôi đi họp lúc 3h chiều' -> AI tự bóc tách tiêu đề & hẹn giờ chuẩn xác"
 }

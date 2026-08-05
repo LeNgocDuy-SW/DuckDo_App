@@ -8,7 +8,8 @@ import 'services/sound_service.dart';
 import 'widgets/duck_logo.dart';
 import 'widgets/duck_wardrobe_sheet.dart';
 import 'screens/pomodoro_screen.dart';
-import 'screens/auth_screen.dart';
+import 'services/auth_service.dart';
+import 'services/cloud_sync_service.dart';
 import 'widgets/voice_task_dialog.dart';
 import 'services/widget_service.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -22,6 +23,116 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isCalendarExpanded = false;
+
+  Future<void> _showAccountSheet(BuildContext ctx) async {
+    final user = await AuthService().getCurrentUser();
+    if (!ctx.mounted) return;
+
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: ctx,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            const SizedBox(height: 20),
+            CircleAvatar(
+              radius: 34,
+              backgroundColor: const Color(0xFFFF8F00),
+              child: Text(
+                user != null && user.displayName.isNotEmpty
+                    ? user.displayName[0].toUpperCase()
+                    : '🐥',
+                style: const TextStyle(
+                  fontSize: 28, color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              user != null ? user.displayName : 'Chưa đăng nhập',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
+            Text(
+              user != null ? user.email : 'Đăng nhập để đồng bộ dữ liệu',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            if (user != null) ...[              
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                tileColor: const Color(0xFFFF8F00).withValues(alpha: 0.1),
+                leading: const Icon(Icons.cloud_upload_rounded, color: Color(0xFFFF8F00)),
+                title: const Text('Sao lưu Đám mây ☁️', style: TextStyle(fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await CloudSyncService.backupToCloud(
+                    dbService: ref.read(databaseProvider),
+                    user: user,
+                  );
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        content: Text('☁️ Đã sao lưu dữ liệu lên Đám mây!'),
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                tileColor: Colors.red.withValues(alpha: 0.1),
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text('Đăng xuất', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  await AuthService().signOut();
+                  if (context.mounted) Navigator.pop(context);
+                },
+              ),
+            ] else ...[              
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF8F00),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('Đăng nhập / Đăng ký', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -478,12 +589,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             tooltip: 'Tài khoản & Đám mây',
             icon: const Icon(Icons.person_outline_rounded, color: Color(0xFFFF8F00)),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AuthScreen()),
-              );
-            },
+            onPressed: () => _showAccountSheet(context),
           ),
           IconButton(
             tooltip: isDark

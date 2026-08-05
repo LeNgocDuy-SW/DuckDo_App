@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../home_screen.dart';
 import '../widgets/duck_logo.dart';
 import '../widgets/floating_duck_particles.dart';
+import 'auth_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final bool isFirstTimeLaunch;
@@ -109,7 +109,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     super.dispose();
   }
 
-  Future<void> _navigateToHome() async {
+  Future<void> _navigateToAuth() async {
     if (_dontShowAgain) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('has_seen_welcome', true);
@@ -117,11 +117,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     if (!mounted) return;
 
-    // Smooth Fade-Scale Route Transition to HomeScreen
+    // Smooth Fade-Scale Route Transition to AuthScreen
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomeScreen(),
+            const AuthScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
             CurvedAnimation(parent: animation, curve: Curves.easeInOut),
@@ -178,7 +178,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   Align(
                     alignment: Alignment.topRight,
                     child: TextButton.icon(
-                      onPressed: _navigateToHome,
+                      onPressed: _navigateToAuth,
                       style: TextButton.styleFrom(
                         foregroundColor: isDark
                             ? Colors.amber.shade200
@@ -347,7 +347,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: _navigateToHome,
+                            onPressed: _navigateToAuth,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
