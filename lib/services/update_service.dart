@@ -87,8 +87,28 @@ class UpdateService {
     required Function(double progress) onProgress,
   }) async {
     try {
-      final request = http.Request('GET', Uri.parse(downloadUrl));
-      final response = await http.Client().send(request);
+      final client = http.Client();
+      var request = http.Request('GET', Uri.parse(downloadUrl));
+      request.followRedirects = false; // Tự xử lý redirect từ GitHub sang AWS S3
+
+      var response = await client.send(request);
+
+      // Nếu GitHub chuyển hướng (301, 302, 307, 308) tới AWS S3 direct download
+      if (response.statusCode == 301 ||
+          response.statusCode == 302 ||
+          response.statusCode == 307 ||
+          response.statusCode == 308) {
+        final redirectLocation = response.headers['location'];
+        if (redirectLocation != null) {
+          final redirectedRequest = http.Request('GET', Uri.parse(redirectLocation));
+          response = await client.send(redirectedRequest);
+        }
+      }
+
+      if (response.statusCode != 200) {
+        debugPrint('Tải APK thất bại với mã lỗi HTTP: ${response.statusCode}');
+        return false;
+      }
 
       final totalBytes = response.contentLength ?? 0;
       int receivedBytes = 0;
@@ -96,6 +116,10 @@ class UpdateService {
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/duckdo-update.apk';
       final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
       final sink = file.openWrite();
 
       await for (var chunk in response.stream) {
@@ -109,8 +133,11 @@ class UpdateService {
       await sink.flush();
       await sink.close();
 
-      // Tự động mở trình cài đặt package APK trên Android
-      final result = await OpenFilex.open(filePath);
+      // Tự động mở trình cài đặt package APK trên Android với MIME type chính xác
+      final result = await OpenFilex.open(
+        filePath,
+        type: 'application/vnd.android.package-archive',
+      );
       return result.type == ResultType.done;
     } catch (e) {
       debugPrint('Lỗi downloadAndInstallApk: $e');
