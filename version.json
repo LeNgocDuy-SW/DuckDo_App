@@ -1,6 +1,6 @@
 {
-  "version": "1.0.5",
-  "versionCode": 6,
+  "version": "1.0.6",
+  "versionCode": 7,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "• Ra mắt Đồng hồ Tập trung Pomodoro Vịt ⏱️: 25 phút tập trung, thưởng XP & Coins\n• Ra mắt Android Home Screen Widget 📌: Đưa chú Vịt Vàng & Top 3 việc hôm nay ra màn hình chính điện thoại\n• Tinh chỉnh vị trí chữ 'Quack!' nổi bật không bị che khuất"
+  "releaseNotes": "• Ra mắt Đăng nhập & Đồng bộ Đám mây 🔑: Hỗ trợ Google 🌐, Facebook 📘, Email & Sao lưu dữ liệu ☁️\n• Ra mắt Tạo công việc bằng Giọng nói AI 🎙️: Nói 'Nhắc tôi đi họp lúc 3h chiều' -> AI tự bóc tách tiêu đề & hẹn giờ chuẩn xác"
 }

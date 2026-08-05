@@ -8,6 +8,8 @@ import 'services/sound_service.dart';
 import 'widgets/duck_logo.dart';
 import 'widgets/duck_wardrobe_sheet.dart';
 import 'screens/pomodoro_screen.dart';
+import 'screens/auth_screen.dart';
+import 'widgets/voice_task_dialog.dart';
 import 'services/widget_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -472,6 +474,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             tooltip: 'Kiểm tra bản cập nhật mới',
             icon: const Icon(Icons.system_update_rounded),
             onPressed: () => _showUpdateDialog(context),
+          ),
+          IconButton(
+            tooltip: 'Tài khoản & Đám mây',
+            icon: const Icon(Icons.person_outline_rounded, color: Color(0xFFFF8F00)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AuthScreen()),
+              );
+            },
           ),
           IconButton(
             tooltip: isDark
@@ -1088,25 +1100,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // VOICE TO TASK AI BUTTON
+          FloatingActionButton(
+            heroTag: 'voice_ai_fab',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const VoiceTaskDialog(),
+              );
+            },
+            backgroundColor: const Color(0xFFFFD54F),
+            foregroundColor: const Color(0xFF5D4037),
+            elevation: 4,
+            child: const Icon(Icons.mic_rounded, size: 28),
+          ),
+          const SizedBox(width: 12),
+          // ADD TASK BUTTON
+          FloatingActionButton.extended(
+            heroTag: 'add_task_fab',
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                builder: (context) => const AddTaskBottomSheet(),
+              );
+            },
+            backgroundColor: const Color(0xFFFF8F00),
+            foregroundColor: Colors.white,
+            elevation: 4,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text(
+              'Thêm công việc',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            builder: (context) => const AddTaskBottomSheet(),
-          );
-        },
-        backgroundColor: const Color(0xFFFF8F00),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Thêm công việc',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+          ),
+        ],
       ),
     );
   }
