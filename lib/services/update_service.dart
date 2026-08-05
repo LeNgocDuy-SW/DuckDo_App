@@ -54,8 +54,28 @@ class UpdateService {
     }
   }
 
+  bool _isVersionGreaterOrEqual(String current, String server) {
+    try {
+      final currentParts =
+          current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final serverParts =
+          server.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+
+      for (int i = 0; i < 3; i++) {
+        final c = i < currentParts.length ? currentParts[i] : 0;
+        final s = i < serverParts.length ? serverParts[i] : 0;
+        if (c > s) return true;
+        if (c < s) return false;
+      }
+      return true; // Nếu bằng nhau (vd 1.0.5 == 1.0.5) -> Trả về true (đã mới nhất)
+    } catch (_) {
+      return current == server;
+    }
+  }
+
   Future<UpdateInfo?> checkForUpdate() async {
     try {
+      final currentVer = await getCurrentVersion();
       final currentCode = await getCurrentVersionCode();
 
       final cacheBuster = DateTime.now().millisecondsSinceEpoch;
@@ -68,6 +88,11 @@ class UpdateService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final updateInfo = UpdateInfo.fromJson(data);
+
+        // NẾU PHIÊN BẢN HIỆN TẠI ĐÃ BẰNG HOẶC LỚN HƠN (VD 1.0.5 == 1.0.5) -> KHÔNG BÁO CẬP NHẬT NỮA
+        if (_isVersionGreaterOrEqual(currentVer, updateInfo.version)) {
+          return null;
+        }
 
         // Nếu versionCode trên Server lớn hơn versionCode trên máy điện thoại
         if (updateInfo.versionCode > currentCode &&
@@ -100,7 +125,8 @@ class UpdateService {
           response.statusCode == 308) {
         final redirectLocation = response.headers['location'];
         if (redirectLocation != null) {
-          final redirectedRequest = http.Request('GET', Uri.parse(redirectLocation));
+          final redirectedRequest =
+              http.Request('GET', Uri.parse(redirectLocation));
           response = await client.send(redirectedRequest);
         }
       }
