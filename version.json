@@ -1,6 +1,6 @@
 {
-  "version": "1.0.4",
-  "versionCode": 5,
+  "version": "1.0.5",
+  "versionCode": 6,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "• Ra mắt Hệ thống Gamification Nuôi Vịt: Thăng cấp XP, Tiền xu 🪙 & Chuỗi ngày chăm chỉ 🔥\n• Cửa hàng Tủ Đồ Vịt: Mua & đeo Mũ cử nhân 🎓, Kính râm 🕶️, Vương miện 👑, Mũ ảo thuật 🎩\n• Phản hồi xúc giác Rung Haptics vui nhộn khi hoàn thành công việc"
+  "releaseNotes": "• Ra mắt Đồng hồ Tập trung Pomodoro Vịt ⏱️: 25 phút tập trung, thưởng XP & Coins\n• Ra mắt Android Home Screen Widget 📌: Đưa chú Vịt Vàng & Top 3 việc hôm nay ra màn hình chính điện thoại\n• Tinh chỉnh vị trí chữ 'Quack!' nổi bật không bị che khuất"
 }

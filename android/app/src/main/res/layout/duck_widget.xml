@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/white">
+
+    <!-- Header Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="DuckDo 🐥"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FF8F00" />
+
+        <TextView
+            android:id="@+id/duck_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lv.1 🔥 1d"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#5D4037"
+            android:background="#FFF3C4"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="6dp"
+        android:background="#FFE082" />
+
+    <!-- Task List Lines -->
+    <TextView
+        android:id="@+id/task_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="• Công việc quan trọng 1"
+        android:textSize="13sp"
+        android:textColor="#1E293B"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/task_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="• Công việc quan trọng 2"
+        android:textSize="13sp"
+        android:textColor="#1E293B"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/task_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="• Công việc quan trọng 3"
+        android:textSize="13sp"
+        android:textColor="#1E293B"
+        android:maxLines="1"
+        android:ellipsize="end" />
+</LinearLayout>

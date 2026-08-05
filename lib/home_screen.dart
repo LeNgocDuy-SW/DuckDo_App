@@ -7,6 +7,8 @@ import 'services/notification_services.dart';
 import 'services/sound_service.dart';
 import 'widgets/duck_logo.dart';
 import 'widgets/duck_wardrobe_sheet.dart';
+import 'screens/pomodoro_screen.dart';
+import 'services/widget_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -349,6 +351,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final tasksAsyncValue = ref.watch(tasksStreamProvider);
     final userStatsAsync = ref.watch(userStatsStreamProvider);
+
+    ref.listen(tasksStreamProvider, (previous, next) {
+      next.whenData((tasks) async {
+        final stats = await ref.read(databaseProvider).getUserStats();
+        await WidgetService.updateHomeScreenWidget(tasks: tasks, stats: stats);
+      });
+    });
     final themeMode = ref.watch(themeProvider);
     final isDark =
         themeMode == ThemeMode.dark ||
@@ -447,6 +456,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             loading: () => const SizedBox.shrink(),
             error: (err, stack) => const SizedBox.shrink(),
+          ),
+          // POMODORO TIMER BUTTON
+          IconButton(
+            tooltip: 'Đồng hồ Tập trung Pomodoro',
+            icon: const Icon(Icons.timer_outlined, color: Color(0xFFFF8F00)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PomodoroScreen()),
+              );
+            },
           ),
           IconButton(
             tooltip: 'Kiểm tra bản cập nhật mới',

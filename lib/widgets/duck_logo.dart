@@ -114,8 +114,8 @@ class _DuckLogoState extends State<DuckLogo>
               // Floating "Quack!" Speech Badge
               if (widget.showQuackBadge)
                 Positioned(
-                  top: 0 - floatOffset * 0.5,
-                  right: 0,
+                  top: (widget.equippedHat != 'none' ? -22.0 : 0.0) - floatOffset * 0.5,
+                  right: widget.equippedHat != 'none' ? -18.0 : -4.0,
                   child: Transform.rotate(
                     angle: 0.12 + (floatOffset * 0.005),
                     child: Container(
