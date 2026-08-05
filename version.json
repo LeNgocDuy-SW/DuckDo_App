@@ -1,6 +1,6 @@
 {
-  "version": "1.0.3",
-  "versionCode": 4,
+  "version": "1.0.4",
+  "versionCode": 5,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "• Thiết kế mới giao diện 'Thêm/Sửa công việc' Duck Theme cút xỉu 🐥✨\n• Phân loại mức độ ưu tiên & danh mục trực quan, dễ thao tác\n• Tự động hẹn giờ & lên lịch thông báo chuẩn xác"
+  "releaseNotes": "• Ra mắt Hệ thống Gamification Nuôi Vịt: Thăng cấp XP, Tiền xu 🪙 & Chuỗi ngày chăm chỉ 🔥\n• Cửa hàng Tủ Đồ Vịt: Mua & đeo Mũ cử nhân 🎓, Kính râm 🕶️, Vương miện 👑, Mũ ảo thuật 🎩\n• Phản hồi xúc giác Rung Haptics vui nhộn khi hoàn thành công việc"
 }

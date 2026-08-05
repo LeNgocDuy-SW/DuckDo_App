@@ -4,8 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'services/database_services.dart';
 import 'models/task.dart';
 
+import 'models/user_stats.dart';
+
 final databaseProvider = Provider<DatabaseService>((ref) {
   return DatabaseService();
+});
+
+final userStatsStreamProvider = StreamProvider<UserStats>((ref) async* {
+  final dbService = ref.watch(databaseProvider);
+  yield* dbService.watchUserStats();
 });
 
 final tasksStreamProvider = StreamProvider<List<Task>>((ref) async* {

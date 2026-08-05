@@ -4,7 +4,9 @@ import 'providers.dart';
 import 'add_task_bottom_sheet.dart';
 import 'services/update_service.dart';
 import 'services/notification_services.dart';
+import 'services/sound_service.dart';
 import 'widgets/duck_logo.dart';
+import 'widgets/duck_wardrobe_sheet.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -36,6 +38,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!mounted) return;
       _showUpdateDialog(context, updateInfo: updateInfo);
     }
+  }
+
+  void _openWardrobeSheet() {
+    SoundService().playClickHaptics();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const DuckWardrobeSheet(),
+    );
+  }
+
+  void _showLevelUpDialog(int newLevel) {
+    SoundService().playLevelUpHaptics();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E293B)
+              : Colors.white,
+          title: Column(
+            children: [
+              const DuckLogo(size: 100, animate: true, showQuackBadge: false),
+              const SizedBox(height: 12),
+              const Text(
+                '🎉 CHÚC MỪNG THĂNG CẤP! 🎉',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFFF8F00),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Chú Vịt DuckDo của bạn vừa thăng lên LEVEL $newLevel! 🐥✨\n\nHãy tiếp tục hoàn thành các công việc để nhận thêm nhiều xu và mở khóa phụ kiện xịn xò nhé!',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14),
+          ),
+          actions: [
+            Center(
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _openWardrobeSheet();
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF8F00),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                icon: const Icon(Icons.check_circle_rounded),
+                label: const Text(
+                  'Xem Tủ Đồ Ngay 🛍️',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showUpdateDialog(BuildContext context, {UpdateInfo? updateInfo}) async {
@@ -277,12 +348,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selectedDate = ref.watch(selectedDateProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final tasksAsyncValue = ref.watch(tasksStreamProvider);
+    final userStatsAsync = ref.watch(userStatsStreamProvider);
     final themeMode = ref.watch(themeProvider);
     final isDark =
         themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.of(context).platformBrightness == Brightness.dark);
     final colorScheme = Theme.of(context).colorScheme;
+
+    final String equippedHat = userStatsAsync.maybeWhen(
+      data: (s) => s.equippedHat,
+      orElse: () => 'none',
+    );
 
     final categories = [
       'Tất cả',
@@ -297,7 +374,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             SizedBox(
               width: 32,
               height: 32,
@@ -305,10 +382,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 size: 26,
                 animate: true,
                 showQuackBadge: false,
+                equippedHat: equippedHat,
               ),
             ),
-            SizedBox(width: 8),
-            Text(
+            const SizedBox(width: 8),
+            const Text(
               'DuckDo',
               style: TextStyle(
                 fontWeight: FontWeight.w900,
@@ -320,6 +398,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         centerTitle: true,
         actions: [
+          // LEVEL & STREAK BADGE BUTTON
+          userStatsAsync.when(
+            data: (stats) => GestureDetector(
+              onTap: _openWardrobeSheet,
+              child: Container(
+                margin: const EdgeInsets.only(right: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFF3C4), Color(0xFFFFE082)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFF8F00).withValues(alpha: 0.5),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF8F00).withValues(alpha: 0.15),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Lv.${stats.level}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF5D4037),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text('🔥', style: TextStyle(fontSize: 11)),
+                    Text(
+                      '${stats.currentStreak}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (err, stack) => const SizedBox.shrink(),
+          ),
           IconButton(
             tooltip: 'Kiểm tra bản cập nhật mới',
             icon: const Icon(Icons.system_update_rounded),
@@ -455,7 +583,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onDaySelected: (selectedDay, focusedDay) {
                   ref.read(selectedDateProvider.notifier).state = selectedDay;
                   setState(() {
-                    _isCalendarExpanded = false; // Thu gọn tự động sau khi chọn
+                    _isCalendarExpanded = false;
                   });
                 },
                 headerStyle: HeaderStyle(
@@ -527,7 +655,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const Divider(height: 1, thickness: 1),
 
-          // 3. Danh sách công việc mở rộng thoải mái
+          // 3. Danh sách công việc
           Expanded(
             child: tasksAsyncValue.when(
               loading: () => const Center(
@@ -563,7 +691,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .toList();
                 }
 
-                // DUCK MASCOT EMPTY STATE
+                // DUCK MASCOT EMPTY STATE WEARING EQUIPPED HAT
                 if (dailyTasks.isEmpty) {
                   return Center(
                     child: SingleChildScrollView(
@@ -572,10 +700,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 20),
-                          const DuckLogo(
+                          DuckLogo(
                             size: 110,
                             animate: true,
                             showQuackBadge: true,
+                            equippedHat: equippedHat,
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -863,10 +992,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    onChanged: (value) {
-                                      ref
+                                    onChanged: (value) async {
+                                      final reward = await ref
                                           .read(databaseProvider)
                                           .toggleTaskCompletion(task.id);
+
+                                      if (reward != null &&
+                                          reward.isCompletedNow) {
+                                        await SoundService()
+                                            .playTaskCompleteHaptics();
+
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .hideCurrentSnackBar();
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Row(
+                                                children: [
+                                                  const Text(
+                                                      '🎉 Quack xong! '),
+                                                  Text(
+                                                    '+${reward.earnedXp} XP  +${reward.earnedCoins} 🪙',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Color(0xFFFFD54F),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              backgroundColor:
+                                                  const Color(0xFF1E293B),
+                                              duration: const Duration(
+                                                  seconds: 2),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        if (reward.leveledUp &&
+                                            context.mounted) {
+                                          _showLevelUpDialog(reward.newLevel);
+                                        }
+                                      }
                                     },
                                   ),
                                   trailing: IconButton(
