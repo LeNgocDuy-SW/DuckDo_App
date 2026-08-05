@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "707052669553",
+    "project_id": "duckdo-dbfe1",
+    "storage_bucket": "duckdo-dbfe1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707052669553:android:ff686ab9c0f1dc09e2a9d0",
+        "android_client_info": {
+          "package_name": "com.example.planner_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "707052669553-98afavggitnogpksc44932uj3nk57oa0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.planner_app",
+            "certificate_hash": "0a94bf356bc28f15b2c0eb85649f360a9f21bba1"
+          }
+        },
+        {
+          "client_id": "707052669553-7h1o5ltap4578jqacm1a8hpc4es8nqju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr-ybMb0oht2KF6FpSMXuByH0nA7qtQr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "707052669553-7h1o5ltap4578jqacm1a8hpc4es8nqju.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
