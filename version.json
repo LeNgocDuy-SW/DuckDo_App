@@ -1,6 +1,6 @@
 {
-  "version": "1.0.8",
-  "versionCode": 9,
+  "version": "1.0.9",
+  "versionCode": 10,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
   "releaseNotes": "Update authentication"
 }

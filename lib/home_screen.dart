@@ -8,6 +8,7 @@ import 'services/sound_service.dart';
 import 'widgets/duck_logo.dart';
 import 'widgets/duck_wardrobe_sheet.dart';
 import 'screens/pomodoro_screen.dart';
+import 'screens/auth_screen.dart';
 import 'services/auth_service.dart';
 import 'services/cloud_sync_service.dart';
 import 'widgets/voice_task_dialog.dart';
@@ -63,7 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              user != null ? user.displayName : 'Chưa đăng nhập',
+              user != null ? user.displayName : 'Chưa đăng nhập (Khách)',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -71,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             Text(
-              user != null ? user.email : 'Đăng nhập để đồng bộ dữ liệu',
+              user != null ? user.email : 'Đăng nhập để đồng bộ dữ liệu đám mây',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 20),
@@ -103,10 +104,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 tileColor: Colors.red.withValues(alpha: 0.1),
                 leading: const Icon(Icons.logout_rounded, color: Colors.red),
-                title: const Text('Đăng xuất', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                title: const Text('Đăng xuất & Đổi tài khoản 🔑', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                 onTap: () async {
                   await AuthService().signOut();
-                  if (context.mounted) Navigator.pop(context);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.of(ctx).pushReplacement(
+                      MaterialPageRoute(builder: (c) => const AuthScreen()),
+                    );
+                  }
                 },
               ),
             ] else ...[              
@@ -115,6 +121,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
+                    Navigator.of(ctx).push(
+                      MaterialPageRoute(builder: (c) => const AuthScreen()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF8F00),
@@ -123,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   icon: const Icon(Icons.login_rounded),
-                  label: const Text('Đăng nhập / Đăng ký', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Đăng nhập / Đăng ký Tài khoản 🔑', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

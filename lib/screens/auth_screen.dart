@@ -453,46 +453,92 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                     const SizedBox(height: 16),
 
                     // Social Login Buttons
-                    Row(
+                    Column(
                       children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
+                        // Google Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton(
                             onPressed: _isLoading ? null : _handleGoogleAuth,
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                              foregroundColor: isDark ? Colors.white : const Color(0xFF1F2937),
+                              side: BorderSide(
+                                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                width: 1.5,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              side: BorderSide(
-                                color: isDark ? Colors.white24 : Colors.grey.shade300,
-                              ),
+                              elevation: isDark ? 0 : 1,
                             ),
-                            icon: const Text('🌐', style: TextStyle(fontSize: 20)),
-                            label: Text(
-                              'Google',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : const Color(0xFF1E293B),
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CustomPaint(painter: _GoogleGLogoPainter()),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Đăng nhập bằng Google',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
+                        const SizedBox(height: 12),
+                        // Facebook Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleFacebookAuth,
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              foregroundColor: const Color(0xFF1877F2),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1877F2),
+                              foregroundColor: Colors.white,
+                              elevation: 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              side: const BorderSide(color: Color(0xFF1877F2)),
                             ),
-                            icon: const Text('📘', style: TextStyle(fontSize: 20)),
-                            label: const Text(
-                              'Facebook',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'f',
+                                      style: TextStyle(
+                                        color: Color(0xFF1877F2),
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 17,
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Đăng nhập bằng Facebook',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -509,4 +555,71 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
       ),
     );
   }
+}
+
+class _GoogleGLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+
+    // Blue arc & horizontal bar
+    final Paint bluePaint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..style = PaintingStyle.fill;
+    final Path bluePath = Path()
+      ..moveTo(w * 0.95, h * 0.5)
+      ..cubicTo(w * 0.95, h * 0.44, w * 0.94, h * 0.38, w * 0.93, h * 0.32)
+      ..lineTo(w * 0.5, h * 0.32)
+      ..lineTo(w * 0.5, h * 0.52)
+      ..lineTo(w * 0.76, h * 0.52)
+      ..cubicTo(w * 0.75, h * 0.61, w * 0.69, h * 0.71, w * 0.5, h * 0.71)
+      ..close();
+    canvas.drawPath(bluePath, bluePaint);
+
+    // Red arc
+    final Paint redPaint = Paint()
+      ..color = const Color(0xFFEA4335)
+      ..style = PaintingStyle.fill;
+    final Path redPath = Path()
+      ..moveTo(w * 0.5, h * 0.28)
+      ..cubicTo(w * 0.62, h * 0.28, w * 0.72, h * 0.33, w * 0.79, h * 0.39)
+      ..lineTo(w * 0.9, h * 0.28)
+      ..cubicTo(w * 0.8, h * 0.19, w * 0.66, h * 0.13, w * 0.5, h * 0.13)
+      ..cubicTo(w * 0.32, h * 0.13, w * 0.17, h * 0.23, w * 0.1, h * 0.38)
+      ..lineTo(w * 0.26, h * 0.5)
+      ..cubicTo(w * 0.3, h * 0.37, w * 0.39, h * 0.28, w * 0.5, h * 0.28)
+      ..close();
+    canvas.drawPath(redPath, redPaint);
+
+    // Yellow arc
+    final Paint yellowPaint = Paint()
+      ..color = const Color(0xFFFBBC05)
+      ..style = PaintingStyle.fill;
+    final Path yellowPath = Path()
+      ..moveTo(w * 0.1, h * 0.38)
+      ..cubicTo(w * 0.05, h * 0.46, w * 0.05, h * 0.54, w * 0.1, h * 0.62)
+      ..lineTo(w * 0.26, h * 0.5)
+      ..cubicTo(w * 0.25, h * 0.47, w * 0.25, h * 0.43, w * 0.26, h * 0.38)
+      ..close();
+    canvas.drawPath(yellowPath, yellowPaint);
+
+    // Green arc
+    final Paint greenPaint = Paint()
+      ..color = const Color(0xFF34A853)
+      ..style = PaintingStyle.fill;
+    final Path greenPath = Path()
+      ..moveTo(w * 0.5, h * 0.71)
+      ..cubicTo(w * 0.39, h * 0.71, w * 0.3, h * 0.63, w * 0.26, h * 0.5)
+      ..lineTo(w * 0.1, h * 0.62)
+      ..cubicTo(w * 0.17, h * 0.77, w * 0.32, h * 0.87, w * 0.5, h * 0.87)
+      ..cubicTo(w * 0.66, h * 0.87, w * 0.79, h * 0.81, w * 0.88, h * 0.73)
+      ..lineTo(w * 0.73, h * 0.61)
+      ..cubicTo(w * 0.67, h * 0.67, w * 0.59, h * 0.71, w * 0.5, h * 0.71)
+      ..close();
+    canvas.drawPath(greenPath, greenPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

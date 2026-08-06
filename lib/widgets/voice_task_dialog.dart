@@ -60,7 +60,8 @@ class _VoiceTaskDialogState extends ConsumerState<VoiceTaskDialog>
           if (mounted) {
             setState(() {
               _isListening = false;
-              _statusMessage = 'Hãy thử lại hoặc gõ tiêu đề trực tiếp.';
+              _statusMessage =
+                  'Không nghe rõ: ${error.errorMsg}. Nhấn vào Micro để thử lại!';
             });
           }
         },
@@ -68,19 +69,44 @@ class _VoiceTaskDialogState extends ConsumerState<VoiceTaskDialog>
 
       if (available && mounted) {
         _startListening();
+      } else if (mounted) {
+        setState(() {
+          _statusMessage =
+              'Không thể kết nối Micro. Bạn hãy cấp quyền Micro trong Cài đặt điện thoại nhé!';
+        });
       }
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Không thể bật giọng nói: $e';
+        });
+      }
+    }
   }
 
   void _startListening() async {
     await SoundService().playClickHaptics();
+    if (!_speech.isAvailable) {
+      bool available = await _speech.initialize();
+      if (!available) {
+        if (mounted) {
+          setState(() {
+            _statusMessage =
+                'Micro chưa sẵn sàng. Hãy cấp quyền Micro trong cài đặt ứng dụng.';
+          });
+        }
+        return;
+      }
+    }
+
     setState(() {
       _isListening = true;
-      _statusMessage = 'Đang lắng nghe giọng nói của bạn... 🎙️';
+      _statusMessage = 'Đang lắng nghe... Hãy nói tên công việc của bạn! 🎙️';
     });
 
     await _speech.listen(
       listenOptions: stt.SpeechListenOptions(
+        localeId: 'vi_VN',
         listenMode: stt.ListenMode.dictation,
         cancelOnError: false,
         partialResults: true,
