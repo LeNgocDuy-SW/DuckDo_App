@@ -1,6 +1,6 @@
 {
-  "version": "1.0.9",
-  "versionCode": 10,
+  "version": "1.1.0",
+  "versionCode": 11,
   "downloadUrl": "https://github.com/LeNgocDuy-SW/DuckDo_App/releases/latest/download/app-release.apk",
-  "releaseNotes": "Update authentication"
+  "releaseNotes": "• Cập nhật giao diện Đăng nhập Google & Facebook chuẩn thương hiệu 🎨\n• Sửa lỗi Microphone & Nhận diện Giọng nói AI 🎙️\n• Hỗ trợ Đăng xuất và Chuyển tài khoản trong Trang cá nhân 👤"
 }
