@@ -61,24 +61,27 @@ class _VoiceTaskDialogState extends ConsumerState<VoiceTaskDialog>
             setState(() {
               _isListening = false;
               _statusMessage =
-                  'Không nghe rõ: ${error.errorMsg}. Nhấn vào Micro để thử lại!';
+                  'Chưa nghe rõ (${error.errorMsg}). Nhấn nút Micro để thử lại!';
             });
           }
         },
       );
 
-      if (available && mounted) {
-        _startListening();
-      } else if (mounted) {
+      if (mounted) {
         setState(() {
-          _statusMessage =
-              'Không thể kết nối Micro. Bạn hãy cấp quyền Micro trong Cài đặt điện thoại nhé!';
+          if (available) {
+            _statusMessage = 'Sẵn sàng! Nhấn nút Micro và bắt đầu nói... 🎙️';
+            _startListening();
+          } else {
+            _statusMessage =
+                'Vui lòng cấp quyền Micro trong Cài đặt ứng dụng để sử dụng.';
+          }
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Không thể bật giọng nói: $e';
+          _statusMessage = 'Nhấn nút Micro bên dưới để bắt đầu nói...';
         });
       }
     }
@@ -86,42 +89,52 @@ class _VoiceTaskDialogState extends ConsumerState<VoiceTaskDialog>
 
   void _startListening() async {
     await SoundService().playClickHaptics();
-    if (!_speech.isAvailable) {
-      bool available = await _speech.initialize();
-      if (!available) {
-        if (mounted) {
-          setState(() {
-            _statusMessage =
-                'Micro chưa sẵn sàng. Hãy cấp quyền Micro trong cài đặt ứng dụng.';
-          });
+
+    try {
+      if (!_speech.isAvailable) {
+        bool available = await _speech.initialize();
+        if (!available) {
+          if (mounted) {
+            setState(() {
+              _statusMessage =
+                  'Không thể truy cập Micro. Hãy cấp quyền Micro trong Cài đặt điện thoại.';
+            });
+          }
+          return;
         }
-        return;
+      }
+
+      setState(() {
+        _isListening = true;
+        _statusMessage = 'Đang lắng nghe... Hãy nói tên công việc của bạn! 🎙️';
+      });
+
+      await _speech.listen(
+        listenOptions: stt.SpeechListenOptions(
+          localeId: 'vi_VN',
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
+          partialResults: true,
+        ),
+        onResult: (result) {
+          if (mounted) {
+            setState(() {
+              _spokenText = result.recognizedWords;
+              if (_spokenText.isNotEmpty) {
+                _parsedTask = VoiceTaskParser.parseVietnameseSpeech(_spokenText);
+              }
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          _statusMessage = 'Nhấn lại vào Micro để thử lại nhé!';
+        });
       }
     }
-
-    setState(() {
-      _isListening = true;
-      _statusMessage = 'Đang lắng nghe... Hãy nói tên công việc của bạn! 🎙️';
-    });
-
-    await _speech.listen(
-      listenOptions: stt.SpeechListenOptions(
-        localeId: 'vi_VN',
-        listenMode: stt.ListenMode.dictation,
-        cancelOnError: false,
-        partialResults: true,
-      ),
-      onResult: (result) {
-        if (mounted) {
-          setState(() {
-            _spokenText = result.recognizedWords;
-            if (_spokenText.isNotEmpty) {
-              _parsedTask = VoiceTaskParser.parseVietnameseSpeech(_spokenText);
-            }
-          });
-        }
-      },
-    );
   }
 
   void _stopListening() async {
