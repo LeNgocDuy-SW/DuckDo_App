@@ -54,7 +54,7 @@ class UpdateService {
     }
   }
 
-  bool _isVersionGreaterOrEqual(String current, String server) {
+  bool _isServerVersionNewer(String current, String server) {
     try {
       final currentParts =
           current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
@@ -64,12 +64,12 @@ class UpdateService {
       for (int i = 0; i < 3; i++) {
         final c = i < currentParts.length ? currentParts[i] : 0;
         final s = i < serverParts.length ? serverParts[i] : 0;
-        if (c > s) return true;
-        if (c < s) return false;
+        if (s > c) return true;
+        if (s < c) return false;
       }
-      return true; // Nếu bằng nhau (vd 1.0.5 == 1.0.5) -> Trả về true (đã mới nhất)
+      return false;
     } catch (_) {
-      return current == server;
+      return false;
     }
   }
 
@@ -89,13 +89,12 @@ class UpdateService {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final updateInfo = UpdateInfo.fromJson(data);
 
-        // NẾU PHIÊN BẢN HIỆN TẠI ĐÃ BẰNG HOẶC LỚN HƠN (VD 1.0.5 == 1.0.5) -> KHÔNG BÁO CẬP NHẬT NỮA
-        if (_isVersionGreaterOrEqual(currentVer, updateInfo.version)) {
-          return null;
-        }
+        final isServerVerNewer =
+            _isServerVersionNewer(currentVer, updateInfo.version);
+        final isServerCodeNewer = updateInfo.versionCode > currentCode;
 
-        // Nếu versionCode trên Server lớn hơn versionCode trên máy điện thoại
-        if (updateInfo.versionCode > currentCode &&
+        // Báo cập nhật nếu Server có version cao hơn HOẶC versionCode cao hơn
+        if ((isServerVerNewer || isServerCodeNewer) &&
             updateInfo.downloadUrl.isNotEmpty) {
           return updateInfo;
         }

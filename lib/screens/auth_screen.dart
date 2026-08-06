@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../home_screen.dart';
 import '../providers.dart';
 import '../services/auth_service.dart';
@@ -92,6 +93,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     );
   }
 
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('⚠️ $msg'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _handleEmailAuth() async {
     if (!_formKey.currentState!.validate()) return;
     await SoundService().playClickHaptics();
@@ -129,53 +141,92 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
         _navigateToHome();
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final String msg;
+        if (e is FirebaseAuthException) {
+          switch (e.code) {
+            case 'user-not-found':
+              msg = 'Tài khoản không tồn tại. Vui lòng đăng ký!';
+              break;
+            case 'wrong-password':
+            case 'invalid-credential':
+              msg = 'Email hoặc mật khẩu không chính xác.';
+              break;
+            case 'email-already-in-use':
+              msg = 'Email này đã được sử dụng cho tài khoản khác.';
+              break;
+            case 'weak-password':
+              msg = 'Mật khẩu quá yếu (cần tối thiểu 6 ký tự).';
+              break;
+            case 'invalid-email':
+              msg = 'Định dạng Email không hợp lệ.';
+              break;
+            default:
+              msg = e.message ?? 'Đăng nhập thất bại (${e.code})';
+          }
+        } else {
+          msg = e.toString().replaceAll('Exception: ', '');
+        }
+        _showError(msg);
+      }
     }
   }
 
   Future<void> _handleGoogleAuth() async {
     await SoundService().playClickHaptics();
     setState(() => _isLoading = true);
-    final user = await AuthService().signInWithGoogle();
 
-    await CloudSyncService.restoreFromCloud(
-      dbService: ref.read(databaseProvider),
-      user: user,
-    );
+    try {
+      final user = await AuthService().signInWithGoogle();
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('🎉 Google: Chào ${user.displayName}!'),
-          backgroundColor: const Color(0xFFFF8F00),
-          behavior: SnackBarBehavior.floating,
-        ),
+      await CloudSyncService.restoreFromCloud(
+        dbService: ref.read(databaseProvider),
+        user: user,
       );
-      await Future.delayed(const Duration(milliseconds: 700));
-      _navigateToHome();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🎉 Google: Chào mừng ${user.displayName}!'),
+            backgroundColor: const Color(0xFFFF8F00),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 700));
+        _navigateToHome();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final String msg;
+        if (e is FirebaseAuthException) {
+          msg = e.message ?? 'Lỗi xác thực Firebase (${e.code})';
+        } else {
+          final errStr = e.toString();
+          if (errStr.contains('hủy') ||
+              errStr.contains('canceled') ||
+              errStr.contains('cancelled')) {
+            msg = 'Đã hủy chọn tài khoản Google.';
+          } else {
+            msg = 'Lỗi đăng nhập Google: ${errStr.replaceAll('Exception: ', '')}';
+          }
+        }
+        _showError(msg);
+      }
     }
   }
 
   Future<void> _handleFacebookAuth() async {
     await SoundService().playClickHaptics();
-    setState(() => _isLoading = true);
-    final user = await AuthService().signInWithFacebook();
-
-    await CloudSyncService.restoreFromCloud(
-      dbService: ref.read(databaseProvider),
-      user: user,
-    );
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('🎉 Facebook: Chào ${user.displayName}!'),
-          backgroundColor: const Color(0xFF1877F2),
+        const SnackBar(
+          content: Text('📘 Facebook sẽ sớm được hỗ trợ. Vui lòng dùng Google hoặc Email!'),
+          backgroundColor: Color(0xFF1877F2),
           behavior: SnackBarBehavior.floating,
         ),
       );
-      await Future.delayed(const Duration(milliseconds: 700));
-      _navigateToHome();
     }
   }
 
@@ -205,7 +256,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16),
                 child: Column(
                   children: [
-                    // Top Row: Skip button
+                    // Skip button
                     Align(
                       alignment: Alignment.topRight,
                       child: TextButton.icon(
@@ -333,7 +384,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 
                             const SizedBox(height: 20),
 
-                            // Email/Password CTA Button
                             SizedBox(
                               width: double.infinity,
                               height: 50,
@@ -383,7 +433,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
 
                     const SizedBox(height: 20),
 
-                    // Divider
                     Row(
                       children: [
                         const Expanded(child: Divider()),
